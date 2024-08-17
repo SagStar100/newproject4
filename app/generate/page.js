@@ -105,11 +105,11 @@ export default function GenerateFlashcards() {
                             </CardContent>
                         </Card>
                     ))}
-                    <Button variant="contained" onClick={handleAddFlashcard} sx={{ mb: 2 }}>
-                        Add Flashcard
+                    <Button variant="contained" onClick={handleAddFlashcard} sx={{ mr: 2 }}>
+                    Add Flashcard
                     </Button>
                     <Button variant="contained" color="primary" onClick={handleSaveFlashcards}>
-                        Save Flashcards
+                    Save Flashcards
                     </Button>
                 </Box>
             )}
