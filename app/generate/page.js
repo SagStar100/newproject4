@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, TextField, Button, Typography, Box, CircularProgress, IconButton, Card, CardContent } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { generateQuizFromFlashcards } from '../quiz/generation'; // Import the quiz generation function
 
@@ -12,6 +12,8 @@ export default function GenerateFlashcards() {
     const [flashcards, setFlashcards] = useState([{ front: '', back: '' }]);
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
+    const [flashcardSetId, setFlashcardSetId] = useState(null); // State to hold the flashcard set ID
+    const [showQuizButton, setShowQuizButton] = useState(false); // State to control quiz button visibility
     const router = useRouter();
 
     const handleFrontChange = (index, event) => {
@@ -43,22 +45,31 @@ export default function GenerateFlashcards() {
 
         setLoading(true);
         try {
-            const flashcardSetId = uuidv4(); // Generate a unique ID for the new flashcard set
+            const newFlashcardSetId = uuidv4(); // Generate a unique ID for the new flashcard set
             const flashcardsData = { name, flashcards };
 
             // Save the flashcard set with its ID
-            await setDoc(doc(db, 'flashcard_sets', flashcardSetId), flashcardsData);
+            await setDoc(doc(db, 'flashcard_sets', newFlashcardSetId), flashcardsData);
 
             // Generate a quiz for the flashcard set
-            await generateQuizFromFlashcards(flashcards, flashcardSetId);
+            await generateQuizFromFlashcards(flashcards, newFlashcardSetId);
 
-            alert('Flashcards and quiz saved successfully!');
-            router.push(`/quiz?setId=${flashcardSetId}`); // Redirect to the quiz page with the flashcard set ID
+            // Update state to show flashcards and quiz button
+            setFlashcardSetId(newFlashcardSetId);
+            setShowQuizButton(true);
+
+            alert('Flashcards saved successfully!');
         } catch (error) {
             console.error('Error saving flashcards:', error);
             alert('Error saving flashcards');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleViewQuiz = () => {
+        if (flashcardSetId) {
+            router.push(`/quiz?setId=${flashcardSetId}`); // Redirect to the quiz page with the flashcard set ID
         }
     };
 
@@ -106,11 +117,16 @@ export default function GenerateFlashcards() {
                         </Card>
                     ))}
                     <Button variant="contained" onClick={handleAddFlashcard} sx={{ mr: 2 }}>
-                    Add Flashcard
+                        Add Flashcard
                     </Button>
                     <Button variant="contained" color="primary" onClick={handleSaveFlashcards}>
-                    Save Flashcards
+                        Save Flashcards
                     </Button>
+                    {showQuizButton && (
+                        <Button variant="contained" color="secondary" onClick={handleViewQuiz} sx={{ mt: 2 }}>
+                            View Quiz
+                        </Button>
+                    )}
                 </Box>
             )}
         </Container>
